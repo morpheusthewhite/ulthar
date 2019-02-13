@@ -1,4 +1,5 @@
-out.jpg
+out.jpeg
 Makefile
 *.o
 *.pro.user
+fractals-generator
