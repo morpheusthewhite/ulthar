@@ -5,10 +5,12 @@
 
 HEADERS = \
     include/mandelbrot.h \
+    include/fractal-calculations.h
 
 SOURCES = \
    $$PWD/src/main.cpp \
-    $$PWD/src/mandelbrot.cpp
+    $$PWD/src/mandelbrot.cpp \
+    src/fractal-calculations.cpp
 
 INCLUDEPATH = include/
 

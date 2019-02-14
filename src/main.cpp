@@ -4,56 +4,42 @@
 #include <thread>
 #include <chrono>
 #include "mandelbrot.h"
+#include "fractal-calculations.h"
 
 #define OUTPUT_FILENAME     "out.jpeg"
 #define IMAGE_QUALITY       100
+
+#define LOWEST_I            -2
+#define LOWEST_R            -2
+#define BIGGEST_I           2
+#define BIGGEST_R           2
+
+#define STEPS               500
 
 using namespace std;
 
 
 bool produceOutput(unsigned char* data, unsigned int rows, unsigned int cols){
-    QImage outputImage(cols, rows, QImage::Format_RGB32);
+    QImage outputImage(static_cast<int>(cols),
+                       static_cast<int>(rows),
+                       QImage::Format_RGB32);
 
     unsigned int a, b;
 
     QColor qColor;
     for(b=0; b<rows; b++){
         for(a=0; a<cols; a++){
-            char color = (data[a + b*cols]);
+            unsigned char color = (data[a + b*cols]);
             charToColor(qColor, color);
-            outputImage.setPixelColor(a, b, qColor);
+            outputImage.setPixelColor(static_cast<int>(a),
+                                      static_cast<int>(b),
+                                      qColor);
         }
     }
 
     QString outputFilename(OUTPUT_FILENAME);
 
     return outputImage.save(outputFilename, "jpeg", IMAGE_QUALITY);
-}
-
-
-void calculatePixels(unsigned int horizontalSteps, unsigned int verticalSteps,
-                     double stepSize, unsigned int threadIndex,
-                     unsigned int nThreads, unsigned char *pixelArray){
-
-    unsigned int start = (verticalSteps/nThreads) * threadIndex;
-    /* avoiding errors in the last approximation */
-    unsigned int end = (threadIndex != nThreads - 1)? (verticalSteps/nThreads) * (threadIndex+1) : verticalSteps;
-
-    /* iterating over each pixel */
-    unsigned int a, b;
-
-    for(b=start; b<end; b++){ // iterating over imaginary values
-        for(a=0; a<horizontalSteps; a++){ // iterating over real values
-            Complex c(LOWEST_R + a * stepSize, BIGGEST_I - b * stepSize);
-
-            /* calculating time of the given complex number */
-            unsigned char mandelbrotTime = calcultateMandelbrotTime(c);
-
-            /* saving it in the allocated array */
-            pixelArray[b * horizontalSteps + a] = mandelbrotTime;
-        }
-
-    }
 }
 
 
@@ -90,7 +76,9 @@ int main(){
 
     /* launching threads */
     for(i=0; i<concurentThreadsSupported; i++)
-        threads[i] = thread(calculatePixels, horizontalSteps, verticalSteps, stepSize, i, concurentThreadsSupported, pixels);
+        threads[i] = thread(calculateFractal, horizontalSteps, verticalSteps,
+                            stepSize, i, concurentThreadsSupported, pixels,
+                            LOWEST_R, BIGGEST_I);
 
     /* waiting for threads to terminate */
     for(i=0; i<concurentThreadsSupported; i++)
