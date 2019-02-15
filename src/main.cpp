@@ -55,6 +55,7 @@ cxxopts::Options* initializeParser(){
     // adding parsing parameters
     options->add_options()
       ("h,help", "Shows info about Ulthar")
+      ("c,cli", "Run on command line")
       ("q,quality", "Output image quality", cxxopts::value<unsigned int>()->default_value("100"))
       ("d,definition", "Definition of the output image (number of pixels in each cartesian unit)",
                     cxxopts::value<unsigned int>()->default_value("100"))
@@ -65,31 +66,21 @@ cxxopts::Options* initializeParser(){
 }
 
 
-int main(int argc, char** argv){
-    // parsing command line
-    auto parser = initializeParser();
-    auto result = parser->parse(argc, argv);
-    if(result.count("help")) {
-        // printing help and exiting
-        cout << parser->help() << endl;
-        return 0;
-    }
+void runOnCli(cxxopts::ParseResult parsedResults){
 
     // parsing all options
-    string outputFilename = result["file"].as<string>();
-    unsigned int quality = result["quality"].as<unsigned int>();
+    string outputFilename = parsedResults["file"].as<string>();
+    unsigned int quality = parsedResults["quality"].as<unsigned int>();
     quality = quality > 100 ? 100 : quality;
-    unsigned int definition = result["definition"].as<unsigned int>();
-
-    delete parser;
+    unsigned int definition = parsedResults["definition"].as<unsigned int>();
 
     /* calculating the cartesian width and height of the image */
     double width = BIGGEST_R - LOWEST_R;
     double height = BIGGEST_I - LOWEST_I;
 
     /* calculating the number of horizontal and vertical pixels */
-    unsigned int horizontalSteps = width * STEPS;
-    unsigned int verticalSteps = height * STEPS;
+    unsigned int horizontalSteps = width * definition;
+    unsigned int verticalSteps = height * definition;
     /* the cartesian distance between each pixel */
     double stepSize = 1 / definition;
 
@@ -101,7 +92,7 @@ int main(int argc, char** argv){
 
     /* allocating needed array */
     unsigned char* pixels = new (nothrow) unsigned char[horizontalSteps * verticalSteps];
-    
+
 
     chrono::time_point<chrono::high_resolution_clock> start = chrono::high_resolution_clock::now();
 
@@ -133,6 +124,28 @@ int main(int argc, char** argv){
 
     /* freeing memory */
     delete[] pixels;
+
+}
+
+void runGui(){
+    // TODO
+
+    return;
+}
+
+int main(int argc, char** argv){
+    // parsing command line
+    auto parser = initializeParser();
+    cxxopts::ParseResult result = parser->parse(argc, argv);
+
+    if(result.count("help")) {
+        // printing help and exiting
+        cout << parser->help() << endl;
+        return 0;
+    }
+    runOnCli(result);
+
+    delete parser;
 
     return 0;
 }
