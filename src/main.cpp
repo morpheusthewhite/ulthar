@@ -3,6 +3,7 @@
 #include <QImage>
 #include <thread>
 #include <chrono>
+#include "cxxopts.hpp"
 #include "mandelbrot.h"
 #include "fractal-calculations.h"
 
@@ -16,10 +17,13 @@
 
 #define STEPS               500
 
+#define DEBUG               1
+
 using namespace std;
 
 
-bool produceOutput(unsigned char* data, unsigned int rows, unsigned int cols){
+bool produceOutput(unsigned char* data, unsigned int rows, unsigned int cols,
+                   string outputFilenameString, unsigned int quality){
     QImage outputImage(static_cast<int>(cols),
                        static_cast<int>(rows),
                        QImage::Format_RGB32);
@@ -37,13 +41,48 @@ bool produceOutput(unsigned char* data, unsigned int rows, unsigned int cols){
         }
     }
 
-    QString outputFilename(OUTPUT_FILENAME);
+    QString outputFilename = QString::fromStdString(outputFilenameString);
 
-    return outputImage.save(outputFilename, "jpeg", IMAGE_QUALITY);
+    return outputImage.save(outputFilename, "jpeg", quality);
 }
 
 
-int main(){
+
+cxxopts::Options* initializeParser(){
+    // allocates the parser
+    cxxopts::Options* options = new cxxopts::Options("Ulthar", "a fancy fractal generator");
+
+    // adding parsing parameters
+    options->add_options()
+      ("h,help", "Shows info about Ulthar")
+      ("q,quality", "Output image quality", cxxopts::value<unsigned int>()->default_value("100"))
+      ("d,definition", "Definition of the output image (number of pixels in each cartesian unit)",
+                    cxxopts::value<unsigned int>()->default_value("100"))
+      ("f,file", "Output filename (.jpg or .jpeg)", cxxopts::value<string>()->default_value("out.jpeg"))
+      ;
+
+    return options;
+}
+
+
+int main(int argc, char** argv){
+    // parsing command line
+    auto parser = initializeParser();
+    auto result = parser->parse(argc, argv);
+    if(result.count("help")) {
+        // printing help and exiting
+        cout << parser->help() << endl;
+        return 0;
+    }
+
+    // parsing all options
+    string outputFilename = result["file"].as<string>();
+    unsigned int quality = result["quality"].as<unsigned int>();
+    quality = quality > 100 ? 100 : quality;
+    unsigned int definition = result["definition"].as<unsigned int>();
+
+    delete parser;
+
     /* calculating the cartesian width and height of the image */
     double width = BIGGEST_R - LOWEST_R;
     double height = BIGGEST_I - LOWEST_I;
@@ -51,30 +90,29 @@ int main(){
     /* calculating the number of horizontal and vertical pixels */
     unsigned int horizontalSteps = width * STEPS;
     unsigned int verticalSteps = height * STEPS;
+    /* the cartesian distance between each pixel */
+    double stepSize = 1 / definition;
 
     /* debug prints */
-    cout << "horizontalSteps: " << horizontalSteps << endl;
-    cout << "verticalSteps: " << verticalSteps << endl;
+    if(DEBUG){
+        cout << "horizontalSteps: " << horizontalSteps << endl;
+        cout << "verticalSteps: " << verticalSteps << endl;
+    }
 
     /* allocating needed array */
     unsigned char* pixels = new (nothrow) unsigned char[horizontalSteps * verticalSteps];
     
-    /* the cartesian distance between each pixel */
-    double stepSize = 1 / static_cast<double>(STEPS);
 
     chrono::time_point<chrono::high_resolution_clock> start = chrono::high_resolution_clock::now();
 
     unsigned concurentThreadsSupported = thread::hardware_concurrency();
-
     /* Sets available threads to 1 if call was not supported (returned 0) */
     concurentThreadsSupported = concurentThreadsSupported == 0 ? 1 : concurentThreadsSupported;
-
     cout << "Launching " << concurentThreadsSupported << " threads!"<< endl;
-
-    unsigned int i;
     thread* threads = new thread [concurentThreadsSupported];
 
     /* launching threads */
+    unsigned int i;
     for(i=0; i<concurentThreadsSupported; i++)
         threads[i] = thread(calculateFractal, horizontalSteps, verticalSteps,
                             stepSize, i, concurentThreadsSupported, pixels,
@@ -90,7 +128,7 @@ int main(){
     cout << "Time to calculate bitmap: " << chrono::duration_cast<chrono::microseconds>(end - start).count()/1000000. << endl << endl;
 
     /* outputting in a JPEG*/
-    if(produceOutput(pixels, verticalSteps, horizontalSteps)) cout << "Image correctly saved!" << endl;
+    if(produceOutput(pixels, verticalSteps, horizontalSteps, outputFilename, quality)) cout << "Image correctly saved!" << endl;
     else cout << "Image saving failed!" << endl;
 
     /* freeing memory */

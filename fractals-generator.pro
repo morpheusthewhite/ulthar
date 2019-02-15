@@ -5,7 +5,8 @@
 
 HEADERS = \
     include/mandelbrot.h \
-    include/fractal-calculations.h
+    include/fractal-calculations.h \
+    include/cxxopts.hpp
 
 SOURCES = \
    $$PWD/src/main.cpp \
