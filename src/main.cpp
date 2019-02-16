@@ -3,9 +3,11 @@
 #include <QImage>
 #include <thread>
 #include <chrono>
+#include <QApplication>
 #include "cxxopts.hpp"
 #include "mandelbrot.h"
 #include "fractal-calculations.h"
+#include "gui.h"
 
 #define OUTPUT_FILENAME     "out.jpeg"
 #define IMAGE_QUALITY       100
@@ -127,25 +129,28 @@ void runOnCli(cxxopts::ParseResult parsedResults){
 
 }
 
-void runGui(){
-    // TODO
+void runGui(int argc, char** argv){
+    QApplication app(argc, argv);
 
-    return;
+    Gui gui(nullptr);
+    gui.show();
+
+    app.exec();
 }
 
 int main(int argc, char** argv){
     // parsing command line
     auto parser = initializeParser();
     cxxopts::ParseResult result = parser->parse(argc, argv);
+    delete parser;
 
     if(result.count("help")) {
         // printing help and exiting
         cout << parser->help() << endl;
         return 0;
     }
-    runOnCli(result);
-
-    delete parser;
+    else if(result.count("cli")) runOnCli(result);
+    else runGui(argc, argv);
 
     return 0;
 }
