@@ -6,7 +6,8 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPixmap>
-
+#include <QFormLayout>
+#include <QLineEdit>
 class Gui : public QWidget
 {
     Q_OBJECT
@@ -18,9 +19,13 @@ signals:
 public slots:
 
 private:
+    QFrame* mLeftFrame;
     QPushButton* mExportButton;
-    QHBoxLayout* mLayout;
     QLabel* mPreviewLabel;
+    QHBoxLayout* mLayout;
+    QFormLayout* mLeftFrameLayout;
+    QLabel* mDefinitionLabel;
+    QLineEdit* mDefinionLineEdit;
 };
 
 #endif // GUI_H
