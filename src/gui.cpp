@@ -1,4 +1,6 @@
 #include "gui.h"
+#include <QImageReader>
+
 
 QDoubleSpinBox* getCoordinatesSpinBox(QWidget* parent=nullptr){
     QDoubleSpinBox* spinbox = new QDoubleSpinBox(parent);
@@ -65,9 +67,8 @@ Gui::Gui(QWidget *parent) : QWidget(parent)
     mLeftFrame->setLayout(mLeftFrameLayout);
 
     /* setting right box */
-    mPreviewLabel = new QLabel("Label di prova", this);
-    QPixmap pixmap("out.jpeg");
-    mPreviewLabel->setPixmap(pixmap);
+    mPreviewLabel = new QLabel();
+    mPreviewLabel->setPixmap(QPixmap("/home/francesco/GitHub Projects/ulthar/out.jpeg"));
 
     /* setting layout of the right box */
     mLayout = new QHBoxLayout();

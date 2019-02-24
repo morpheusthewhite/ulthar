@@ -4,6 +4,8 @@
 #include <thread>
 #include <chrono>
 #include <QApplication>
+#include <assert.h>
+
 #include "cxxopts.hpp"
 #include "mandelbrot.h"
 #include "fractal-calculations.h"
@@ -141,8 +143,9 @@ void runGui(int argc, char** argv){
 int main(int argc, char** argv){
     // parsing command line
     auto parser = initializeParser();
+    assert(parser && "Parser is null");
+
     cxxopts::ParseResult result = parser->parse(argc, argv);
-    delete parser;
 
     if(result.count("help")) {
         // printing help and exiting
@@ -152,5 +155,6 @@ int main(int argc, char** argv){
     else if(result.count("cli")) runOnCli(result);
     else runGui(argc, argv);
 
+    delete parser;
     return 0;
 }
