@@ -86,7 +86,7 @@ void runOnCli(cxxopts::ParseResult parsedResults){
     unsigned int horizontalSteps = width * definition;
     unsigned int verticalSteps = height * definition;
     /* the cartesian distance between each pixel */
-    double stepSize = 1 / definition;
+    double stepSize = 1 / static_cast<double>(definition);
 
     /* debug prints */
     if(DEBUG){
